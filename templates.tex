@@ -1,0 +1,43 @@
+\begin{figure}[hb!] \centering \includegraphics[scale = 0.5]{image_name.png}
+	\caption{Лента в QIP}
+	\label{fig:label_name}
+\end{figure}
+
+\begin{table}[h] \caption{Table caption}
+\label{table:label_name}
+\centering
+     \begin{tabular}{ | >{\centering}m{0.35\textwidth} 
+					  | >{\centering}m{0.2\textwidth} 
+					  | >{\centering}m{0.11\textwidth} 
+					  | >{\centering}m{0.05\textwidth}
+					  | >{\centering\arraybackslash}m{0.155\textwidth}|}
+	\hline Функция & \vk{} для Windows & VK QM & QIP & \textbf{\vkapp{}}\\
+  	\hline Пересылка сообщений & + & - & - & +\\
+  	\hline Отображение вложений & + & +/- & +/- & +\\
+  	\hline Прикрепление вложений & + & +/- & +/- & +\\
+  	\hline Пометка сообщений прочитанными & + & - & - & +\\
+  	\hline Классический интерфейс мессенджера & - & + & + & +\\
+  	\hline Уведомления \\ о новых сообщениях \\ на рабочем столе  & + & - & + &
+  	+\\
+  	\hline Информирование о наборе сообщения собеседником & + & - & + & +\\
+  	\hline Отсутствие отвлекающего функционала \\ социальной сети & - & + & +/- &
+  	+
+  	\\
+  	\hline Поддержка \\ групповых диалогов & + & - & + & + \\
+  	\hline Синхронизация \\ истории сообщений \\ с учетной записью & + & - & - &
+  	+
+  	\\
+  	\hline
+  \end{tabular}
+\end{table}
+
+
+\begin{lstlisting}[style = cstyle, 
+           caption = {Получение экземпляра класса VNetworkSimple},
+           label = lst:vnetworksimple] 
+VNetworkSimple *VNetworkManager::simple()
+{
+  static VNetworkSimple networkSimpleInstance;
+  return &networkSimpleInstance;
+}
+\end{lstlisting}
