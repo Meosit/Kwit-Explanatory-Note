@@ -1,0 +1,276 @@
+% !TeX spellcheck = russian-aot-ieyo
+% Зачем: Определяет класс документа (То, как будет выглядеть документ)
+% Примечание: параметр draft помечает строки, вышедшие за границы страницы, прямоугольником, в фильной версии его нужно удалить.
+\documentclass[a4paper,14pt,russian,oneside,final]{extreport}
+
+% Зачем: Предоставляет проприетарный Times New Roman.
+% ОБНОВЛЕНИЕ: лучше использовать scalable-cyrfonts-tex: меньше проблем с установкой
+% Из руководства к PSCyr: "Во избежание проблем пакет PSCyr должен загружаться перед пакета-ми inputenc и babel".
+% Примечание: Требует шаманства при установке, инструкция http://plumbum-blog.blogspot.com/2010/06/miktex-28-pscyr-04d.html
+% http://blog.harrix.org/?p=444
+% надо закомментировать это, чтобы использовать scalable-cyrfonts-tex:
+\usepackage{pscyr}
+
+% Зачем: Пункты (в терминологии требований) в терминологии TeX subsubsection должны нумероваться
+% Почему: Пункт 2.2.3 Требований по оформлению пояснительной записки.
+\setcounter{secnumdepth}{3}
+
+
+% Зачем: Пакет для работы с перечислениями
+\usepackage{enumitem}
+
+
+
+% Зачем: Устанавливает символ начала простого перечисления
+% Почему: Пункт 2.3.5 Требований по оформлению пояснительной записки.
+\setlist{nolistsep}
+
+
+% % Зачем: Устанавливает символ начала именованного перечисления
+% % Почему: Пункт 2.3.8 Требований по оформлению пояснительной записки.
+% \renewcommand{\labelenumi}{\asbuk{enumi})}
+% \renewcommand{\labelenumii}{\arabic{enumii})}
+
+% Зачем: Устанавливает отступ от границы документа до символа списка, чтобы этот отступ равнялся отступу параграфа
+% Почему: Пункт 2.3.5 Требований по оформлению пояснительной записки.
+
+\setlist[itemize,0]{itemindent=\parindent + 2.2ex,leftmargin=0ex,label=--}
+\setlist[enumerate,1]{itemindent=\parindent + 2.7ex,leftmargin=0ex}
+\setlist[enumerate,2]{itemindent=\parindent + \parindent - 2.7ex}
+
+
+% Зачем: Установка кодировки исходных файлов.
+\usepackage[utf8]{inputenc}
+
+% Зачем: Делает результирующий PDF "searchable and copyable".
+\usepackage{cmap}
+
+% Зачем: Выбор внутренней TeX кодировки.
+\usepackage[T2A]{fontenc}
+
+% Зачем: Чтобы можно было использовать русские буквы в формулах, но в случае использования предупреждать об этом.
+\usepackage[warn]{mathtext}
+
+% Зачем: Учет особенностей различных языков.
+\usepackage[russian]{babel}
+
+% Зачем: Добавляет поддержу дополнительных размеров текста 8pt, 9pt, 10pt, 11pt, 12pt, 14pt, 17pt, and 20pt.
+% Почему: Пункт 2.1.1 Требований по оформлению пояснительной записки.
+\usepackage{extsizes}
+
+
+% Зачем: Длинна, пимерно соответвующая 5 символам
+% Почему: Требования содержат странное требование про отсупы в 5 символов (для немоноширинного шрифта :| )
+\newlength{\fivecharsapprox}
+\setlength{\fivecharsapprox}{6ex}
+
+
+% Зачем: Добавляет отступы для абзацев.
+% Почему: Пункт 2.1.3 Требований по оформлению пояснительной записки.
+\usepackage{indentfirst}
+\setlength{\parindent}{\fivecharsapprox} % Примерно соответсвует 5 символам.
+
+
+% Зачем: Настраивает отступы от границ страницы.
+% Почему: Пункт 2.1.2 Требований по оформлению пояснительной записки.
+\usepackage[left=3cm,top=2.0cm,right=1.5cm,bottom=2.7cm]{geometry}
+
+
+% Зачем: Настраивает межстрочный интервал, для размещения 40 +/- 3 строки текста на странице.
+% Почему: Пункт 2.1.1 Требований по оформлению пояснительной записки.
+\usepackage[nodisplayskipstretch]{setspace} 
+\setstretch{1.1}
+%\onehalfspacing
+
+% Зачем: Выбор шрифта по-умолчанию. 
+% Почему: Пункт 2.1.1 Требований по оформлению пояснительной записки.
+% Примечание: В требованиях не указан, какой именно шрифт использовать. По традиции используем TNR.
+\renewcommand{\rmdefault}{ftm} % Times New Roman
+
+% Зачем: Содержание документа вшивается в pdf (hidelinks - не выделять ссылки)
+% Почему: Просто так
+\usepackage[hidelinks]{hyperref}
+
+% Зачем: Отключает использование изменяемых межсловных пробелов.
+% Почему: Так не принято делать в текстах на русском языке.
+\frenchspacing
+
+% Пакет для настройки нумерации формул/иллюстраций, etc
+\usepackage{amsmath}
+
+% Зачем: Включение номера раздела в номер рисунка. Нумерация рисунков внутри раздела.
+\AtBeginDocument{\numberwithin{figure}{section}}
+
+
+% Зачем: Включение номера раздела в номер таблицы. Нумерация таблиц внутри раздела.
+\AtBeginDocument{\numberwithin{table}{section}}
+
+% Зачем: Переопределяем стандартную нумерацию, т.к. в отчете будут только section и т.д. в терминологии TeX
+\makeatletter
+\renewcommand{\thesection}{\arabic{section}}
+\makeatother
+
+% Зачем: Дополнительные возможности в форматировании таблиц
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{array}
+
+
+
+% Зачем: Работа с колонтитулами
+\usepackage{fancyhdr} % пакет для установки колонтитулов
+\pagestyle{fancy} % смена стиля оформления страниц
+
+
+% Зачем: Пакет для вставки картинок
+% Примечание: Объяснение, зачем final - http://tex.stackexchange.com/questions/11004/why-does-the-image-not-appear
+\usepackage[final]{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg,.eps}
+
+
+% Зачем: Директория в которой будет происходить поиск картинок
+\graphicspath{{figures/}}
+
+
+% Зачем: Настраивает отступ между таблицей с содержанимем и словом СОДЕРЖАНИЕ
+% Почему: Пункт 2.2.7 Требований по оформлению пояснительной записки.
+\makeatletter
+\renewcommand{\tableofcontents}{
+	\sectioncentered*{
+	\MakeUppercase{\contentsname}}
+	\@starttoc{toc}
+}
+\makeatother
+
+\makeatletter
+\newcommand\invisiblesection[1]{%
+  \refstepcounter{section}%
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}%
+  \sectionmark{#1}\phantom{}}
+\makeatother
+
+
+% Зачем: Определяет отступы слева для записей в таблице содержания.
+% Почему: Пункт 2.2.7 Требований по оформлению пояснительной записки.
+\makeatletter
+\renewcommand{\l@section}{\@dottedtocline{1}{0.5em}{1.2em}}
+\renewcommand{\l@subsection}{\@dottedtocline{2}{1.7em}{2.0em}}
+\makeatother
+
+
+% Зачем: Нумерация страниц располагается справа снизу страницы
+% Почему: Пункт 2.2.8 Требований по оформлению пояснительной записки.
+\fancyhf{} % очистка текущих значений
+\fancyfoot[R]{\thepage} % установка верхнего колонтитула
+\renewcommand{\footrulewidth}{0pt} % убрать разделительную линию внизу страницы
+\renewcommand{\headrulewidth}{0pt} % убрать разделительную линию вверху страницы
+\fancypagestyle{plain}{ 
+   \fancyhf{}
+    \rfoot{\thepage}}
+
+% Зачем: Задает стиль заголовков раздела жирным шрифтом, прописными буквами, без точки в конце
+% Почему: Пункты 2.1.1, 2.2.5, 2.2.6 и ПРИЛОЖЕНИЕ Л Требований по оформлению пояснительной записки.
+\makeatletter
+\renewcommand\section{%
+  \clearpage\@startsection {section}{1}%
+    {\fivecharsapprox}%
+    {-1em \@plus -1ex \@minus -.2ex}%
+    {1em \@plus .2ex}%
+    {\raggedright\hyphenpenalty=10000\normalfont\large\bfseries\MakeUppercase}}
+\makeatother
+    
+
+% Зачем: Задает стиль заголовков подразделов
+% Почему: Пункты 2.1.1, 2.2.5 и ПРИЛОЖЕНИЕ Л Требований по оформлению пояснительной записки.
+\makeatletter
+\renewcommand\subsection{%
+  \@startsection{subsection}{2}%
+    {\fivecharsapprox}%
+    {-1em \@plus -1ex \@minus -.2ex}%
+    {1em \@plus .2ex}%
+    {\raggedright\hyphenpenalty=10000\normalfont\normalsize\bfseries}}
+\makeatother
+
+
+% Зачем: Задает стиль заголовков пунктов
+% Почему: Пункты 2.1.1, 2.2.5 и ПРИЛОЖЕНИЕ Л Требований по оформлению пояснительной записки.
+\makeatletter
+\renewcommand\subsubsection{
+  \@startsection{subsubsection}{3}%
+    {\fivecharsapprox}%
+    {-1em \@plus -1ex \@minus -.2ex}%
+    {\z@}%
+    {\raggedright\hyphenpenalty=10000\normalfont\normalsize\bfseries}}
+\makeatother
+
+% Зачем: для оформления введения и заключения, они должны быть выровнены по центру.
+% Почему: Пункты 1.1.15 и 1.1.11 Требований по оформлению пояснительной записки.
+\makeatletter
+\newcommand\sectioncentered{%
+  \clearpage\@startsection {section}{1}%
+    {\z@}%
+    {-1em \@plus -1ex \@minus -.2ex}%
+    {1em \@plus .2ex}%
+    {\centering\hyphenpenalty=10000\normalfont\large\bfseries\MakeUppercase}%
+    }
+\makeatother
+
+
+% Зачем: Добавление подписей к рисункам
+\usepackage[nooneline]{caption}
+\usepackage{subcaption}
+
+
+% Зачем: Задание подписей, разделителя и нумерации частей рисунков
+% Почему: Пункт 2.5.5 Требований по оформлению пояснительной записки.
+\DeclareCaptionLabelFormat{stbfigure}{Рисунок #2}
+\DeclareCaptionLabelFormat{stbtable}{Таблица #2}
+\DeclareCaptionLabelSeparator{stb}{~--~}
+\captionsetup{labelsep=stb}
+\captionsetup[figure]{labelformat=stbfigure,justification=centering}
+\captionsetup[table]{labelformat=stbtable,justification=raggedright}
+\renewcommand{\thesubfigure}{\asbuk{subfigure}}
+
+
+% Зачем: inline-коментирование содержимого.
+\newcommand{\ignore}[2]{\hspace{0in}#2}
+
+% Зачем: Оформление листингов кода
+% Примечание: final нужен для переопределения режима draft, в котором листинги не выводятся в документ.
+\usepackage[final]{listings}
+
+\renewcommand{\lstlistingname}{Листинг}
+
+% Зачем: Нумерация листингов в пределах секции
+\AtBeginDocument{\numberwithin{lstlisting}{section}}
+
+
+% Стиль кода для C++
+\lstdefinestyle{cstyle}{
+   xleftmargin=0ex,
+   language=c++,
+   morekeywords={SIGNAL, SLOT},
+   basicstyle=\footnotesize\ttfamily,
+   breaklines=true,
+   columns=fullflexible
+}
+
+% Стиль кода
+\lstdefinestyle{cssstyle}{
+   xleftmargin=0ex,
+   language=c,
+   morekeywords={font, weight, color, background, border, radius,
+   left, right, padding, top, bottom},
+   basicstyle=\footnotesize\ttfamily, breaklines=true,
+   columns=fullflexible
+}
+
+
+% Для включения pdf документов в результирующий файл
+\usepackage{pdfpages}
+
+
+% Зачем: преобразовывать текст в верхний регистр командой MakeTextUppercase
+\usepackage{textcase}
+
+\input{macro}

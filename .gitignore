@@ -1,0 +1,10 @@
+.settings/*
+tmp/*
+.project
+.texlipse
+*.pdf
+*.synctex.gz*
+*.aux
+*.log
+*.toc
+/tmp/
