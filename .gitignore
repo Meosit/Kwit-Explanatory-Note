@@ -2,9 +2,9 @@
 tmp/*
 .project
 .texlipse
-*.pdf
 *.synctex.gz*
 *.aux
 *.log
 *.toc
+*.glue
 /tmp/
