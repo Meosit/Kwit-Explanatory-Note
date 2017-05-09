@@ -238,6 +238,7 @@
 % Зачем: Оформление листингов кода
 % Примечание: final нужен для переопределения режима draft, в котором листинги не выводятся в документ.
 \usepackage[final]{listings}
+\usepackage[dvipsnames]{xcolor}
 
 \renewcommand{\lstlistingname}{Листинг}
 
@@ -245,10 +246,44 @@
 \AtBeginDocument{\numberwithin{lstlisting}{section}}
 
 
+\lstdefinelanguage{Kotlin}{
+  keywords={package, as, typealias, this, super, val, var, fun, for, null, true, false, is, in, throw, return, break, continue, object, if, try, else, while, do, when, yield, typeof, yield, typeof, class, interface, enum, object, override, public, private, get, set, import, abstract, data, inline, infix, catch, },
+  keywordstyle=\color{NavyBlue}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=true,
+  commentstyle=\color{gray}\ttfamily,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  stringstyle=\color{ForestGreen}\ttfamily,
+  morestring=[b]",
+  morestring=[s]{"""*}{*"""},
+}
+
 % Стиль кода для C++
 \lstdefinestyle{cstyle}{
    xleftmargin=0ex,
    language=c++,
+   morekeywords={SIGNAL, SLOT},
+   basicstyle=\footnotesize\ttfamily,
+   breaklines=true,
+   columns=fullflexible
+}
+
+% Стиль кода для Kotlin
+\lstdefinestyle{ktstyle}{
+   xleftmargin=0ex,
+   language=Kotlin,
+   morekeywords={},
+   basicstyle=\footnotesize\ttfamily,
+   breaklines=true,
+   columns=fullflexible
+}
+
+
+% Стиль кода для Java
+\lstdefinestyle{javastyle}{
+   xleftmargin=0ex,
+   language=Java,
    morekeywords={SIGNAL, SLOT},
    basicstyle=\footnotesize\ttfamily,
    breaklines=true,

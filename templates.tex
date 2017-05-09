@@ -24,8 +24,7 @@
   	+
   	\\
   	\hline Поддержка \\ групповых диалогов & + & - & + & + \\
-  	\hline Синхронизация \\ истории сообщений \\ с учетной записью & + & - & - &
-  	+
+  	\hline Синхронизация \\ истории сообщений \\ с учетной записью & + & - & - & +
   	\\
   	\hline
   \end{tabular}
@@ -39,5 +38,20 @@ VNetworkSimple *VNetworkManager::simple()
 {
   static VNetworkSimple networkSimpleInstance;
   return &networkSimpleInstance;
+}
+\end{lstlisting}
+
+
+\begin{lstlisting}[style = ktstyle, 
+           caption = {Пример функции на языке \kt{}},
+           label = lst:load_page] 
+inline fun <T> wrapServiceCall(logger: Logger, block: () -> T): T = try {
+    block()
+} catch (e: ServiceRequestException) {
+    logger.debug("Invalid user request")
+    throw RequestException(e.status, e.errors)
+} catch (e: ServiceException) {
+    logger.warn("Error while service call\n", e)
+    throw ControllerException(cause = e)
 }
 \end{lstlisting}
