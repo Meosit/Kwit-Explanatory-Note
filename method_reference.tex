@@ -1,0 +1,180 @@
+\section{Описание методов и классов}
+
+В данном разделе приведены сведения об основных классах и методах серверной части
+программного средства.
+
+\begin{center}
+\begin{longtable}{ 
+      | >{\centering}m{0.28\textwidth} 
+      | >{\centering}m{0.31\textwidth} 
+      | >{\centering\arraybackslash}m{0.35\textwidth}|}
+  \caption{Основные классы и методы пакета <<service>>}
+  \label{table:service_reference}\\
+  \hline Класс & Метод  & Описание\\ \hline
+  \endfirsthead
+  \caption*{Продолжение таблицы \ref{table:service_reference}}\\
+  \hline 
+    Класс & Метод & Описание\\
+  \hline
+  \endhead
+  \hline
+  \endfoot
+  	\multirow{6}{*}{AbstractCrudService} 
+  	& checkValidNestedEntities-\\IfNeed(entity: E) 
+  	& Метод, предназначенный для валидации вложенных сущностей, где они передаются в качестве 
+  	параметров метода, по умолчанию пустой, нужен для переопределения в наследниках, где это 
+  	нужно \mbox{ServiceNotFoundException}.\\
+  \cline{2-3}
+  	& checkPersonalVisibility(\\userId: Long, \\entityId: Long) 
+  	& Проверяет соответствие принадлежности сущности с entityId пользователю с userId. Если 
+  	сущность не принадлежит пользователю, бросает \mbox{ServiceNotFoundException}.\\
+  \cline{2-3}
+  	& findByIdAndUserId(\\id: Long, \\userId: Long): E?
+  	& Находит в базе данных сущность с данными id и userId или возвращает null если сущности с таким
+  	 сочетанием признаков не существует.\\
+  \cline{2-3}
+  	& create(entity: E): E?
+  	& Создаёт сущность, переданную в параметре (если она валидна), если она успешно создана, возвращает эту 
+  	сущность, с заполненными полями, которые были сгенерированы в процессе создания (например, id). Если произошла 
+  	ошибка в процессе изменения, то бросает \mbox{ServiceException}.\\
+  \cline{2-3}
+  	& update(entity: E): E?
+  	& Изменяет сущность, переданную в параметре (если она валидна), если она успешно изменена, возвращает эту 
+  	сущность, с обновлёнными полями. Если произошла ошибка в процессе изменения, то бросает \mbox{ServiceException}.\\
+  \cline{2-3}
+  	& delete(id: Long, \\userId: Long): Unit?
+  	& Удаляет сущность по переданным признакам, ничего не возвращает, если операция была 
+  	проведена успешно (Unit), возвращает null, если такой сущности не существует. Если 
+  	произошла ошибка в процессе удаления, то бросает \mbox{ServiceException}.\\
+  \hline
+  	\multirow{4}{*}{CategoryServiceImpl} 
+  	& delete(id: Long, userId: Long): Unit?
+  	& Удаляет категорию по переданным признакам и удаляет все связанные с ней транзакции, 
+  	ничего не возвращает, если операция была проведена успешно (Unit), возвращает null, 
+  	если такой сущности не существует. Если произошла ошибка в процессе удаления, то 
+  	бросает \mbox{ServiceException}.\\
+  \cline{2-3}
+  	& softDelete(id: Long, \\newId: Long,\\userId: Long): Unit?
+  	& Удаляет категорию по переданным признакам и перемещает все связанные с ней транзакции на 
+  	категорию с newId. Категория с newId должна быть того же типа, что и удаляемая категория. 
+  	Ничего не возвращает, если операция была проведена успешно (Unit), возвращает null, если такой 
+  	сущности не существует. Если произошла ошибка в процессе удаления, то бросает \mbox{ServiceException}.\\
+  \cline{2-3}
+  	& calculateCategoryStats(\\userId: Long, \\type: CategoryType, \\currencyCode: String, \\range: DateRange?\\): CategoriesStats
+  	& Возвращает объект статистики, содержщий список всех категорий для данных пользователя и типа, 
+  	содержащий статистику по заданной валюте. Если параметр range равен null, тогда статистика подсчитвается 
+  	за всё доступное время. \\
+  \cline{2-3}
+  	& findByUserIdAndType(\\id: Long, \\type: CategoryType\\): List<Category>
+  	& Возвращает список всех категории указанного типа type, принадлежащих пользователю с указаным id.\\
+  \hline
+  	CurrencyServiceImpl
+  	& findByCode(code: String)\\: Currency?
+  	& Ищет в базе данных валюту с указанным кодом code, если такой валюты не существует --- возвращает null.\\
+  \hline
+  	TransactionServiceImpl
+  	& findAllByUserId(\\userId: Long, \\pageable: Pageable\\): Page<Transaction>
+  	& Возвращает страницу транзакций, содержащий список транзакций данного пользователя, количество элеметнов 
+  	списка, общее количество транзакций данного пользователя, в соответстии с параметрами объекта Pageable.\\
+  \hline
+  	\multirow{4}{*}{WalletServiceImpl} 
+  	& delete(id: Long, userId: Long): Unit?
+  	& Удаляет счёт по переданным признакам и удаляет все связанные с ним транзакции, ничего не возвращает, 
+  	если операция была проведена успешно (Unit), возвращает null, если такой сущности не существует. 
+  	Если произошла ошибка в процессе удаления, то бросает \mbox{ServiceException}.\\
+  \cline{2-3}
+  	& softDelete(id: Long, \\newId: Long,\\userId: Long): Unit?
+  	& Удаляет счёт по переданным признакам и перемещает все связанные с ним транзакции на счёт с newId. 
+  	Счёт с newId должен содержать ту же валюту, что и удаляемый счёт. Ничего не возвращает, если операция 
+  	была проведена успешно (Unit), возвращает null, если такой сущности не существует. Если произошла 
+  	ошибка в процессе удаления, то бросает \mbox{ServiceException}.\\
+  \cline{2-3}
+  	& calculateCostForecast(\\userId: Long)\\: CostForecast?
+  	& Вычисляет прогнозируемые расходы для пользователя на основании информации о его зарплате, 
+  	также вычисляет ежедневную сумму денег до зарплаты и количество дней до неё.\\
+  \hline
+  	\multirow{5}{*}{UserServiceImpl}
+  	& register(registrationDetails\\: RegistrationDetails)
+  	& Регистрирует нового пользователя в приложении. Бросает \mbox{ServiceBadRequestException} 
+  	если пользователь с таким переданным email уже существует, пароль и подтверждение пароля не совпадают 
+  	или если вылюты зарплаты не существует в базе.\\
+  \cline{2-3}
+  	& logout(principal\\: OAuth2Authentication)
+  	& Удаляет из базы данных токен доступа OAuth 2.0 для данного пользователя, делая тем самым выход из приложения.\\
+  \cline{2-3}
+  	& changePassword(\\changeDetails: \\PasswordChangeDetails, \\userId: Long, \\principal: \\OAuth2Authentication)
+  	& Заменяет текщий пароль пользователя на новый. Бросает \mbox{ServiceBadRequestException} 
+  	если новый пароль не совпадает с подтверждением пароля, либо если старый пароль неверен.\\
+  \cline{2-3}
+  	& findSalaryInfo(\\userId: Long)\\: SalaryInfo?
+  	& Возвращает информацию о зарплате для текущего пользователя.\\
+  \cline{2-3}
+  	& setSalaryInfo(salaryInfo\\: SalaryInfo,\\userId: Long)\\: SalaryInfo?
+  	& Обновляет информацию о зарплате для текущего пользователя, бросает \mbox{ServiceBadRequestException}, 
+  	если переданой валюты не существует в базе.\\
+  \end{longtable}
+\end{center}
+
+\begin{center}
+\begin{longtable}{ 
+      | >{\centering}m{0.28\textwidth} 
+      | >{\centering}m{0.31\textwidth} 
+      | >{\centering\arraybackslash}m{0.35\textwidth}|}
+  \caption{Классы и методы блока обработки ошибок}
+  \label{table:exception_reference}\\
+  \hline Класс & Метод  & Описание\\ \hline
+  \endfirsthead
+  \caption*{Продолжение таблицы \ref{table:exception_reference}}\\
+  \hline 
+    Класс & Метод & Описание\\
+  \hline
+  \endhead
+  \hline
+  \endfoot
+  \hline
+  \hline
+  	WhiteLabelError-\\PageController
+  	& error(request: \\HttpServletRequest): Any
+  	& Представляет собой глобальный обработчик неопознанных ошибок, включая ошибки неверного URL. 
+  	Возвращает в зависимости от MIME-типа запроса либо JSON-объект с инфрмацией об ошибке, либо html-страницу с ошибкой.\\
+  \hline
+    \multirow{2}{*}{RestExceptionHandler}
+  	& handleMethodArgument-NotValid(
+  			ex: MethodArgument-NotValidException,
+            \\headers: HttpHeaders,
+            \\status: HttpStatus,
+            \\request: WebRequest
+    \\): ResponseEntity<Any>
+  	& Основной обработчик ошибок валидации при первичной обработке запроса, возвращает на клиент стандартизованный JSON-объект
+  	со списком ошибок валидации и HTTP-кодом 400.\\
+  \cline{2-3}
+  	& handleHttpMessage-NotReadable(
+            ex: HttpMessageNotReadable-Exception,
+            headers: HttpHeaders,
+            status: HttpStatus,
+            request: WebRequest): ResponseEntity<Any>
+  	& Обрабатывает ошибки десереализации из JSON в Java-объекты.\\
+  \cline{2-3}
+  	& handleTypeMismatch(
+            ex: TypeMismatchException,
+            headers: HttpHeaders,
+            status: HttpStatus,
+            request: WebRequest): ResponseEntity<Any>
+  	& Обрабатывает ошибки типов в передаваемых с клиента параметрах запроса.\\
+  \cline{2-3}
+  	& handleConstraint-ViolationException(ex: Constraint-ViolationException): ResponseEntity<Any>
+  	& Обрабатывает ошибки нарушения целостности базы данных, таких как попытка вставки неуникального 
+  	значения в уникальное поле и др.\\
+  \cline{2-3}
+  	& handleBadRequest(ex: RequestException): ResponseEntity<Any>
+  	& Обрабатывает обрабатывает ошибки нарушения бизнес логики приложения, такие как остутствие какой-либо сущности
+  	в базе данных или невалидных вложенных сущностях. \\
+  \cline{2-3}
+  	& handleInternalError(ex: ControllerException): ResponseEntity<Any>
+  	& Основной обработчик внутренних ошибок сервера, возвращает HTTP-код 500 Internal Server Error. \\
+  \cline{2-3}
+  	& handleInternalError-Explicit(ex: Exception): ResponseEntity<Any>
+  	& Обработчик непредвиденных внутренних ошибок сервера, которые могут возникнуть в процессе эксплуатации системы, 
+  	возвращает HTTP-код 500 Internal Server Error. \\
+  \end{longtable}
+\end{center}

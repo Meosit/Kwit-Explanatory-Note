@@ -59,7 +59,7 @@
 \usepackage{extsizes}
 
 
-% Зачем: Длинна, пимерно соответвующая 5 символам
+% Зачем: Длина, пимерно соответвующая 5 символам
 % Почему: Требования содержат странное требование про отсупы в 5 символов (для немоноширинного шрифта :| )
 \newlength{\fivecharsapprox}
 \setlength{\fivecharsapprox}{6ex}
@@ -238,7 +238,17 @@
 % Зачем: Оформление листингов кода
 % Примечание: final нужен для переопределения режима draft, в котором листинги не выводятся в документ.
 \usepackage[final]{listings}
+
+% Зачем: поддержка различных цветов подсветки синтаксиса (Kotlin)
 \usepackage[dvipsnames]{xcolor}
+
+% Зачем: поддержка многостраничных таблиц
+\usepackage{tabularx}
+\usepackage{ltablex} 
+\usepackage{longtable}
+
+% Зачем: квадратные скобки в списке использованых источников
+\usepackage{enumitem}
 
 \renewcommand{\lstlistingname}{Листинг}
 
