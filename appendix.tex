@@ -2,6 +2,178 @@
 \addcontentsline{toc}{section}{Приложение A. Исходный код программы}
 
 \begin{lstlisting}[style = ktstyle]
+
+
+abstract class AbstractPersonalCrudController<E : UserBaseEntity<Long>>(
+        private val crudService: PersonalCrudService<E, Long>,
+        private val logger: Logger
+) : CrudController<E, Long> {
+
+
+    override fun getAll(@Auth auth: UserDetails, pageable: Pageable): Page<E> =
+            wrapServiceCall(logger) { crudService.findAllByUserId(auth.userId, pageable) }
+
+    override fun getById(@PathVariable("id") id: Long?, @Auth auth: UserDetails): E = wrapServiceCall(logger) {
+        crudService.findByIdAndUserId(id!!, auth.userId).ifNullNotFound(id)
+    }
+
+    override fun create(@Valid @RequestBody entity: E, @Auth auth: UserDetails): E = wrapServiceCall(logger) {
+        entity.id = null
+        entity.userId = auth.userId
+        crudService.create(entity) ?: throw badRequestException("Error", "Cannot create entity")
+    }
+
+    override fun update(@PathVariable("id") id: Long?, @Valid @RequestBody entity: E, @Auth auth: UserDetails): E {
+        entity.id = id
+        entity.userId = auth.userId
+        return wrapServiceCall(logger) {
+            crudService.update(entity) ?:
+                    throw badRequestException("Error", "Cannot create entity")
+        }
+    }
+
+    override fun delete(@PathVariable("id") id: Long?, @Auth auth: UserDetails) =
+            wrapServiceCall(logger) { crudService.delete(id!!, auth.userId) }
+                    ?: notFoundException("Error", "Entity not found")
+
+}
+
+@Validated
+open class CategoryControllerImpl(
+        private val categoryService: CategoryService
+) : AbstractPersonalCrudController<Category>(categoryService, logger), CategoryController {
+    companion object {
+
+        private val logger = LoggerFactory.getLogger(CategoryControllerImpl::class.java)!!
+    }
+
+    @InitBinder
+    fun initBinder(binder: WebDataBinder) {
+        binder.registerCustomEditor(CategoryType::class.java, CategoryTypeBinder())
+    }
+
+    override fun calculateCategoryStats(
+            @PathVariable("type") type: CategoryType,
+            @PathVariable("currencyCode") @CurrencyCode currencyCode: String,
+            @RequestParam(name = "from") @DateTimeFormat(pattern = "yyyy-MM-dd") from: Date,
+            @RequestParam(name = "to") @DateTimeFormat(pattern = "yyyy-MM-dd") to: Date,
+            @Auth auth: UserDetails
+    ): CategoriesStats =
+            wrapServiceCall(logger) { categoryService.calculateCategoryStats(auth.userId, type, currencyCode, from till to) }
+
+    override fun calculateCategoryStatsAllTime(
+            @PathVariable("type") type: CategoryType,
+            @PathVariable("currencyCode") @CurrencyCode currencyCode: String,
+            @Auth auth: UserDetails
+    ): CategoriesStats =
+            wrapServiceCall(logger) { categoryService.calculateCategoryStats(auth.userId, type, currencyCode, null) }
+
+    override fun getAll(@Auth auth: UserDetails): List<Category> =
+            wrapServiceCall(logger) { categoryService.findAllByUserId(auth.userId) }
+
+    override fun getAll(@Auth auth: UserDetails, @PathVariable("type") type: CategoryType): List<Category> =
+            wrapServiceCall(logger) { categoryService.findByUserIdAndType(auth.userId, type) }
+
+    override fun softDelete(@PathVariable("id") id: Long?, @RequestParam("newCategory") newId: Long?, @Auth auth: UserDetails) =
+            wrapServiceCall(logger) { categoryService.softDelete(id!!, newId!!, auth.userId) }
+                    ?: notFoundException("Error", "Entity not found")
+}
+
+open class CurrencyControllerImpl(
+        private val currencyService: CurrencyService
+) : CurrencyController {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CurrencyControllerImpl::class.java)!!
+    }
+
+    override fun getAll(): Iterable<Currency> =
+            wrapServiceCall(logger) { currencyService.findAll() }
+
+    override fun getAll(@Auth auth: UserDetails, pageable: Pageable): Page<Currency> =
+            wrapServiceCall(logger) { currencyService.findAll(pageable) }
+
+    override fun getById(@PathVariable("id") id: Long?, @Auth auth: UserDetails): Currency =
+            wrapServiceCall(logger) { currencyService.findById(id!!).ifNullNotFound(id) }
+
+    override fun getByCode(@PathVariable("code") @CurrencyCode code: String): Currency =
+            wrapServiceCall(logger) {
+                currencyService.findByCode(code)
+                        ?: notFoundException("Error", "Entity with code '$code' not found")
+            }
+
+    override fun create(@Valid @RequestBody entity: Currency, @Auth auth: UserDetails): Currency =
+            wrapServiceCall(logger) { currencyService.create(entity) }
+
+    override fun update(@PathVariable("id") id: Long?, @Valid @RequestBody entity: Currency, @Auth auth: UserDetails): Currency =
+            wrapServiceCall(logger) { currencyService.update(id!!, entity) }
+
+    override fun delete(@PathVariable("id") id: Long?, @Auth auth: UserDetails) =
+            wrapServiceCall(logger) { currencyService.delete(id!!) }
+}
+
+open class TransactionControllerImpl(
+        transactionService: TransactionService
+) : AbstractPersonalCrudController<Transaction>(transactionService, logger), TransactionController {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TransactionControllerImpl::class.java)!!
+    }
+
+}
+
+class UserControllerImpl(
+        private val userService: UserService
+) : UserController {
+
+    companion object {
+        val logger = LoggerFactory.getLogger(UserControllerImpl::class.java)!!
+    }
+
+    override fun register(@Valid @RequestBody registrationDetails: RegistrationDetails) =
+            wrapServiceCall(logger) { userService.register(registrationDetails) }
+
+    override fun getSalaryInfo(@Auth auth: UserDetails): SalaryInfo =
+            wrapServiceCall(logger) { userService.findSalaryInfo(auth.userId) }
+                    ?: SalaryInfo(null, null)
+
+    override fun setSalaryInfo(@Valid @RequestBody salaryInfo: SalaryInfo, @Auth auth: UserDetails) =
+            wrapServiceCall(logger) { userService.setSalaryInfo(salaryInfo, auth.userId) }
+
+    override fun logout(principal: OAuth2Authentication) {
+        wrapServiceCall(logger) { userService.logout(principal) }
+    }
+
+    override fun changePassword(@Valid @RequestBody passwordChangeDetails: PasswordChangeDetails, @Auth auth: UserDetails, principal: OAuth2Authentication) =
+            wrapServiceCall(logger) { userService.changePassword(passwordChangeDetails, auth.userId, principal) }
+}
+
+open class WalletControllerImpl(
+        private val walletService: WalletService
+) : AbstractPersonalCrudController<Wallet>(walletService, logger), WalletController {
+
+    @InitBinder
+    fun initBinder(binder: WebDataBinder) {
+        binder.registerCustomEditor(WalletType::class.java, WalletTypeBinder())
+    }
+
+    override fun getCostForecast(@Auth auth: UserDetails): CostForecast? =
+            wrapServiceCall(logger) { walletService.calculateCostForecast(auth.userId) }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(WalletControllerImpl::class.java)!!
+    }
+
+    override fun getAll(@Auth auth: UserDetails): List<Wallet> =
+            wrapServiceCall(logger) { walletService.findAllByUserId(auth.userId) }
+
+    override fun softDelete(@PathVariable("id") id: Long?, @RequestParam("newWallet") newId: Long?, @Auth auth: UserDetails) =
+            wrapServiceCall(logger) { walletService.softDelete(id!!, newId!!, auth.userId) }
+                    ?: notFoundException("Error", "Entity not found")
+
+}
+
+
 @Service
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = arrayOf(ServiceException::class))
 class UserServiceImpl(
@@ -102,4 +274,434 @@ class UserServiceImpl(
         }
     }
 }
+
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = arrayOf(ServiceException::class))
+abstract class AbstractCrudService<E : UserBaseEntity<Long>>(
+        private val crudRepository: PersonalCrudRepository<E, Long>
+) : PersonalCrudService<E, Long> {
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    protected open fun checkValidNestedEntitiesIfNeed(entity: E) {}
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    protected fun checkPersonalVisibility(userId: Long, entityId: Long) =
+            findByIdAndUserId(entityId, userId).ifNullServiceNotFound(entityId)
+
+    override fun findByIdAndUserId(id: Long, userId: Long): E? =
+            wrapJPACall { crudRepository.findByIdAndUserId(id, userId) }
+
+    override fun create(entity: E): E? = wrapJPACall {
+        checkValidNestedEntitiesIfNeed(entity)
+        wrapJPAModifyingCall { crudRepository.save(entity) }
+    }
+
+    override fun update(entity: E): E? = wrapJPACall {
+        checkPersonalVisibility(entity.userId!!, entity.id!!)
+        checkValidNestedEntitiesIfNeed(entity)
+        wrapJPAModifyingCall { crudRepository.save(entity) }
+    }
+
+    override fun delete(id: Long, userId: Long): Unit? = wrapJPACall {
+        checkPersonalVisibility(userId, id)
+        wrapJPAModifyingCall { crudRepository.delete(id) }
+    }
+
+}
+
+@Service
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = arrayOf(ServiceException::class))
+class WalletServiceImpl(
+        private val walletRepository: WalletRepository,
+        private val transactionRepository: TransactionRepository,
+        private val userService: UserService
+) : AbstractCrudService<Wallet>(walletRepository), WalletService {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(WalletServiceImpl::class.java)!!
+    }
+
+    override fun checkValidNestedEntitiesIfNeed(entity: Wallet) {
+        val errors = mutableListOf<RestErrorMessage>()
+        if (entity.currency?.id == null) {
+            errors.add("Field 'currency'", "Nested field 'id' is not specified")
+        }
+        errors.throwIfNeed()
+    }
+
+    override fun findByIdAndUserId(id: Long, userId: Long): Wallet? =
+            wrapJPACall { walletRepository.findByIdAndUserId(id, userId) }
+
+    override fun findAllByUserId(userId: Long): List<Wallet> =
+            wrapJPACall { walletRepository.findByUserId(userId) }
+
+    override fun findAllByUserId(userId: Long, pageable: Pageable): Page<Wallet> =
+            wrapJPACall { walletRepository.findByUserId(userId, pageable) }
+
+    override fun delete(id: Long, userId: Long): Unit? {
+        checkPersonalVisibility(userId, id)
+        if (id == userId) throw ServiceBadRequestException("Error" to "Cannot shift transactions to delete wallet")
+        val affected = wrapJPACall { transactionRepository.deleteByWalletId(id) }
+        logger.info("$affected transactions deleted from wallet[$id]")
+        val isSuccess: Unit? = wrapJPAModifyingCall { walletRepository.delete(id) }
+        if (isSuccess != null) logger.info("Wallet[$id] deleted")
+        return isSuccess
+    }
+
+    override fun softDelete(id: Long, newId: Long, userId: Long): Unit? {
+        checkPersonalVisibility(userId, id)
+        if (id == newId) throw ServiceBadRequestException("Error" to "Cannot shift transactions to delete wallet")
+        val newWallet = wrapJPACall { walletRepository.findByIdAndUserId(newId, userId) }
+        val oldWallet = wrapJPACall { walletRepository.findByIdAndUserId(id, userId) }
+        newWallet ?: throw ServiceNotFoundException("New wallet" to "Wallet not found.")
+        oldWallet ?: throw ServiceNotFoundException("Old wallet" to "Wallet not found.")
+        if (oldWallet.currency?.id != newWallet.currency?.id) {
+            throw ServiceBadRequestException("Invalid currency" to "Wallets must have same currencies")
+        }
+        val affected = wrapJPACall { transactionRepository.shiftToNewWallet(newId, id) }
+        logger.info("$affected transactions shifted from wallet[$id] to wallet[$newId, ${newWallet.name}]")
+        val isSuccess: Unit? = wrapJPAModifyingCall { walletRepository.delete(id) }
+        if (isSuccess != null) logger.info("Wallet[$id] deleted")
+        return isSuccess
+    }
+
+    override fun calculateCostForecast(userId: Long): CostForecast? {
+        val errors = mutableListOf<RestErrorMessage>()
+        val salaryInfo = userService.findSalaryInfo(userId)
+        salaryInfo ?: return null
+        val average = walletRepository.calculateSumForNormal(salaryInfo.salaryCurrencyCode!!)
+        average ?: errors.add("Error", "Cannot calculate daily sum")
+        val prediction = transactionRepository.calculateMovingAveragePrediction(userId,
+                salaryInfo.salaryCurrencyCode, PREDICTION_LOOKUP_DAYS)
+        prediction ?: errors.add("Error", "Cannot calculate average prediction")
+        errors.throwIfNeed()
+
+        val calendar = Calendar.getInstance()
+        val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
+        val maxDayOfMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val salaryDay = if (salaryInfo.salaryDay!! > maxDayOfMonth) maxDayOfMonth else salaryInfo.salaryDay
+        val daysTillSalary = if (dayOfMonth >= salaryDay)
+            maxDayOfMonth - dayOfMonth + salaryDay else salaryDay - dayOfMonth
+        return CostForecast(
+                dailySumTillSalary = (average!!.divide(BigDecimal(daysTillSalary), RoundingMode.FLOOR)).setScale(4, RoundingMode.DOWN),
+                actualCosts = prediction!!,
+                daysTillSalary = daysTillSalary
+        )
+    }
+
+}
+
+@Service
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = arrayOf(ServiceException::class))
+open class TransactionServiceImpl(
+        private val transactionRepository: TransactionRepository
+) : AbstractCrudService<Transaction>(transactionRepository), TransactionService {
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    override fun checkValidNestedEntitiesIfNeed(entity: Transaction) {
+        val errors = mutableListOf<RestErrorMessage>()
+        if (entity.wallet?.id == null) {
+            errors.add("Field 'wallet'", "Nested field 'id' is not specified")
+        }
+        if (entity.category?.id == null) {
+            errors.add("Field 'category'", "Nested field 'id' is not specified")
+        }
+        errors.throwIfNeed()
+    }
+
+    override fun findByIdAndUserId(id: Long, userId: Long): Transaction?
+            = wrapJPACall { transactionRepository.findByIdAndUserId(id, userId) }
+
+    override fun findAllByUserId(userId: Long, pageable: Pageable): Page<Transaction>
+            = wrapJPACall { transactionRepository.findByUserId(userId, pageable) }
+
+}
+
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = arrayOf(ServiceException::class))
+abstract class AbstractCrudService<E : UserBaseEntity<Long>>(
+        private val crudRepository: PersonalCrudRepository<E, Long>
+) : PersonalCrudService<E, Long> {
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    protected open fun checkValidNestedEntitiesIfNeed(entity: E) {}
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    protected fun checkPersonalVisibility(userId: Long, entityId: Long) =
+            findByIdAndUserId(entityId, userId).ifNullServiceNotFound(entityId)
+
+    override fun findByIdAndUserId(id: Long, userId: Long): E? =
+            wrapJPACall { crudRepository.findByIdAndUserId(id, userId) }
+
+    override fun create(entity: E): E? = wrapJPACall {
+        checkValidNestedEntitiesIfNeed(entity)
+        wrapJPAModifyingCall { crudRepository.save(entity) }
+    }
+
+    override fun update(entity: E): E? = wrapJPACall {
+        checkPersonalVisibility(entity.userId!!, entity.id!!)
+        checkValidNestedEntitiesIfNeed(entity)
+        wrapJPAModifyingCall { crudRepository.save(entity) }
+    }
+
+    override fun delete(id: Long, userId: Long): Unit? = wrapJPACall {
+        checkPersonalVisibility(userId, id)
+        wrapJPAModifyingCall { crudRepository.delete(id) }
+    }
+
+}
+
+@Service
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = arrayOf(ServiceException::class))
+class CurrencyServiceImpl(
+        private val currencyRepository: CurrencyRepository
+) : CurrencyService {
+
+    override fun create(currency: Currency): Currency = wrapJPACall {
+        currency.id = null
+        currencyRepository.save(currency)
+    }
+
+    override fun findAll(): Iterable<Currency> =
+            wrapJPACall { currencyRepository.findAll() }
+
+    override fun findById(id: Long): Currency? =
+            wrapJPACall { currencyRepository.findOne(id) }
+
+    override fun findAll(pageable: Pageable): Page<Currency> =
+            wrapJPACall { currencyRepository.findAll(pageable) }
+
+    override fun findByCode(code: String): Currency? =
+            wrapJPACall { currencyRepository.findByCode(code) }
+
+    override fun update(id: Long, currency: Currency): Currency = wrapJPACall {
+        currency.id = id
+        currencyRepository.save(currency)
+    }
+
+    override fun delete(id: Long) = wrapJPACall { currencyRepository.delete(id) }
+}
+
+@Repository
+interface UserRepository : PagingAndSortingRepository<User, Long> {
+    fun findByEmail(email: String): User?
+}
+
+interface PersonalCrudRepository<E : BaseEntity<ID>, ID : Serializable> {
+    fun findByIdAndUserId(id: ID, userId: ID): E?
+    fun <S : E> save(entity: S): S
+    fun delete(id: ID)
+}
+
+@Repository
+interface TransactionRepository :
+        PagingAndSortingRepository<Transaction, Long>,
+        PersonalCrudRepository<Transaction, Long> {
+
+    @Query("""SELECT t FROM Transaction t
+                INNER JOIN FETCH t.wallet w
+                INNER JOIN FETCH w.currency
+                INNER JOIN FETCH t.category
+                WHERE  (t.id = :id) AND (t.userId = :userId)""")
+    override fun findByIdAndUserId(@Param("id") id: Long, @Param("userId") userId: Long): Transaction?
+
+    @Query("""SELECT t FROM Transaction t
+                INNER JOIN FETCH t.wallet w
+                INNER JOIN FETCH w.currency
+                INNER JOIN FETCH t.category
+                WHERE t.userId = :id
+                ORDER BY t.date DESC, t.id ASC""",
+            countQuery = "SELECT COUNT(t) FROM Transaction t WHERE t.userId = :id")
+    fun findByUserId(@Param("id") id: Long, pageable: Pageable): Page<Transaction>
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Transaction t WHERE t.category.id = :id")
+    fun deleteByCategoryId(@Param("id") categoryId: Long): Int
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Transaction t WHERE t.wallet.id = :id")
+    fun deleteByWalletId(@Param("id") id: Long): Int
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE transaction SET category_id = :newCategoryId WHERE category_id = :oldCategoryId",
+            nativeQuery = true)
+    fun shiftToNewCategory(
+            @Param("newCategoryId") newCategoryId: Long,
+            @Param("oldCategoryId") oldCategoryId: Long): Int
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE transaction SET wallet_id = :newWalletId WHERE wallet_id = :oldWalletId",
+            nativeQuery = true)
+    fun shiftToNewWallet(
+            @Param("newWalletId") newWalletId: Long,
+            @Param("oldWalletId") oldWalletId: Long): Int
+
+    @Query("""SELECT IF(SUM(act.sum) IS NULL, 0, SUM(act.sum)) / (:daysLookup + 1)
+            FROM transaction AS act
+              JOIN wallet ON act.wallet_id = wallet.id
+              JOIN currency ON wallet.currency_id = currency.id
+            WHERE (act.user_id = :userId) AND
+                  (currency.code = :currencyCode) AND
+                  (act.date BETWEEN DATE_SUB(NOW(), INTERVAL :daysLookup DAY) AND NOW())""",
+            nativeQuery = true)
+    fun calculateMovingAveragePrediction(
+            @Param("userId") userId: Long,
+            @Param("currencyCode") currencyCode: String,
+            @Param("daysLookup") daysLookup: Int): BigDecimal?
+
+}
+
+@Repository
+interface WalletRepository :
+        PagingAndSortingRepository<Wallet, Long>,
+        PersonalCrudRepository<Wallet, Long> {
+
+    @Query("SELECT w FROM Wallet w INNER JOIN FETCH w.currency WHERE (w.id = :id) AND (w.userId = :userId)")
+    override fun findByIdAndUserId(@Param("id") id: Long, @Param("userId") userId: Long): Wallet?
+
+    @Query("SELECT w FROM Wallet w INNER JOIN FETCH w.currency WHERE w.userId = :id ORDER BY w.type ASC, w.id ASC",
+            countQuery = "SELECT COUNT(w) FROM Wallet w WHERE w.userId = :id")
+    fun findByUserId(@Param("id") id: Long, pageable: Pageable): Page<Wallet>
+
+    @Query("SELECT w FROM Wallet w INNER JOIN FETCH w.currency WHERE w.userId = :id ORDER BY w.type ASC, w.id ASC")
+    fun findByUserId(@Param("id") id: Long): List<Wallet>
+
+    @Query("""SELECT SUM(w.balance) FROM Wallet w
+                INNER JOIN w.currency c
+                WHERE w.type = 'NORMAL'
+                AND c.code = :currencyCode""")
+    fun calculateSumForNormal(@Param("currencyCode") currencyCode: String): BigDecimal?
+}
+
+
+@Repository
+interface CurrencyRepository : PagingAndSortingRepository<Currency, Long> {
+    fun findByCode(code: String): Currency?
+}
+
+
+@Repository
+interface CategoryRepository :
+        PagingAndSortingRepository<Category, Long>,
+        PersonalCrudRepository<Category, Long> {
+
+    fun findByUserIdOrderByIdAsc(id: Long, pageable: Pageable): Page<Category>
+
+    fun findByUserIdOrderByIdAsc(id: Long): List<Category>
+
+    fun findByUserIdAndType(id: Long, type: CategoryType): List<Category>
+
+    fun fetchCategoryStats(
+            @Param("userId") userId: Long,
+            @Param("currencyId") currencyId: Long,
+            @Param("categoryType") categoryType: String,
+            @Param("startDate") startDate: Timestamp,
+            @Param("endDate") endDate: Timestamp
+    ): List<CategoryStats>
+}
+
+data class DateRange(
+        val start: Date,
+        val end: Date
+) {
+    companion object {
+        val NONE = DateRange(MIN_SQL_DATETIME, MAX_SQL_DATETIME)
+    }
+}
+
+data class RestError(
+        val status: Int,
+        val error: String,
+        val errors: List<RestErrorMessage>
+) {
+    constructor(status: HttpStatus, vararg errors: RestErrorMessage) : this(
+            status.value(),
+            status.reasonPhrase,
+            errors.asList())
+
+    constructor(status: HttpStatus, errors: List<RestErrorMessage>) : this(
+            status.value(),
+            status.reasonPhrase,
+            errors)
+
+}
+
+data class RestErrorMessage(
+        val title: String,
+        val message: String
+)
+
+data class OauthError(
+        val error: String,
+        val errorDescription: String
+)
+
+inline fun <T> wrapJPACall(block: () -> T): T = try {
+    block()
+} catch (e: DataIntegrityViolationException) {
+    throw ServiceConstraintFailException("Invalid entity" to "Invalid entity references")
+} catch (e: DataAccessException) {
+    throw ServiceException(cause = e)
+}
+
+inline fun <T> wrapJPAModifyingCall(block: () -> T): T? = try {
+    block()
+} catch (e: EmptyResultDataAccessException) {
+    null
+} catch (e: DataIntegrityViolationException) {
+    throw ServiceConstraintFailException("Invalid entity" to "Invalid entity references")
+} catch (e: DataAccessException) {
+    throw ServiceException(cause = e)
+}
+
+
+inline fun <T> wrapServiceCall(logger: Logger, block: () -> T): T = try {
+    block()
+} catch (e: ServiceRequestException) {
+    logger.debug("Invalid user request")
+    throw RequestException(e.status, e.errors)
+} catch (e: ServiceException) {
+    logger.warn("Error while service call\n", e)
+    throw ControllerException(cause = e)
+}
+
+fun notFoundException(title: String, message: String): Nothing =
+        throw RequestException(HttpStatus.NOT_FOUND, title to message)
+
+fun badRequestException(title: String, message: String): Nothing =
+        throw RequestException(HttpStatus.BAD_REQUEST, title to message)
+
+fun MutableList<RestErrorMessage>.throwIfNeed(): Nothing? =
+        if (this.isNotEmpty()) throw ServiceBadRequestException(this) else null
+
+fun MutableList<RestErrorMessage>.add(title: String, message: String) {
+    this.add(RestErrorMessage(title, message))
+}
+
+inline fun <T> T?.ifNull(block: T.() -> T): T {
+    return if (this == null) block() else this
+}
+
+fun <ID, T : BaseEntity<ID>> T?.ifNullServiceNotFound(id: ID? = null): T {
+    if (this == null) {
+        throw ServiceNotFoundException("Error" to "Entity ${if (id == null) "" else "with id '$id' "}not found")
+    }
+    return this
+}
+
+fun <ID, T : BaseEntity<ID>> T?.ifNullNotFound(id: ID? = null): T {
+    if (this == null) {
+        throw RequestException(HttpStatus.NOT_FOUND,
+                "Error" to "Entity ${if (id == null) "" else "with id '$id' "}not found")
+    }
+    return this
+}
+
+infix fun Date.till(end: Date) = DateRange(this, end)
+
+fun Date.toStamp(): Timestamp = Timestamp.from(this.toInstant())
+
+
 \end{lstlisting}
