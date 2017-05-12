@@ -178,3 +178,46 @@
   	возвращает HTTP-код 500 Internal Server Error. \\
   \end{longtable}
 \end{center}
+
+\begin{center}
+\begin{longtable}{ 
+      | >{\centering}m{0.28\textwidth} 
+      | >{\centering}m{0.31\textwidth} 
+      | >{\centering\arraybackslash}m{0.35\textwidth}|}
+  \caption{Вспомогательные методы}
+  \label{table:exception_reference}\\
+  \hline Класс & Метод  & Описание\\ \hline
+  \endfirsthead
+  \caption*{Продолжение таблицы \ref{table:exception_reference}}\\
+  \hline 
+    Класс & Метод & Описание\\
+  \hline
+  \endhead
+  \hline
+  \endfoot
+  \hline
+  \hline
+    \multirow{2}{*}{FunctionsKt}
+    & wrapJPACall (block: () -> T): T
+    & Функция принимает в себя блок, который следует выполнить в окружении 
+    обработки ошибок, связанных с базой данных и JPA. Возвращает результат выполнения переданного блока, 
+    либо бросает одного из наследников \mbox{ServiceException}\\
+  \cline{2-3}  
+    & wrapJPAModifyingCall (block: () -> T): T?
+    & Функция принимает в себя блок, нацеленый на внесение изменений в базу данных чере JPA, 
+    который следует выполнить в окружении обработки ошибок, связанных с базой данных и JPA. Возвращает обновлённую сущность либо null, если такой сущности не существует\\
+  \cline{2-3}  
+    & T?.ifNullServiceNotFound (id: ID? = null): T
+    & Метод проверяет объект, на котором его вызвали на null и бросает \mbox{ServiceNotFoundException}, 
+    если данный объект равен null\\
+  \cline{2-3}  
+    & Date.till(end: Date): DateRange
+    & Инфиксная функция, позволяющая создавать временный период из двух дат\\
+      
+  \cline{2-3}  
+    & MutableList< RestErrorMessage >.add(title: String, message: String)
+    & Расширение над списком ошибок валидации, позволяющее добавлять данные ошибки, передавая основные 
+    её параметры заголовка и сообщения.\\
+
+\end{longtable}
+\end{center}

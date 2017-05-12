@@ -691,17 +691,4 @@ fun <ID, T : BaseEntity<ID>> T?.ifNullServiceNotFound(id: ID? = null): T {
     return this
 }
 
-fun <ID, T : BaseEntity<ID>> T?.ifNullNotFound(id: ID? = null): T {
-    if (this == null) {
-        throw RequestException(HttpStatus.NOT_FOUND,
-                "Error" to "Entity ${if (id == null) "" else "with id '$id' "}not found")
-    }
-    return this
-}
-
-infix fun Date.till(end: Date) = DateRange(this, end)
-
-fun Date.toStamp(): Timestamp = Timestamp.from(this.toInstant())
-
-
 \end{lstlisting}
